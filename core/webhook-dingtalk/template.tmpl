@@ -1,0 +1,55 @@
+{{ define "dingtalk.default.title" }}
+[{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] 监控告警通知
+{{ end }}
+
+{{ define "dingtalk.default.content" }}
+{{ if gt (len .Alerts.Firing) 0 -}}
+## 🚨 告警触发 ({{ .Alerts.Firing | len }}个)
+
+{{ range .Alerts.Firing }}
+---
+### 📌 {{ .Labels.alertname }}
+
+| 项目 | 内容 |
+|------|------|
+| **告警级别** | {{ if eq .Labels.severity "critical" }}🔴 P1-紧急{{ else if eq .Labels.severity "warning" }}🟡 P2-警告{{ else }}🔵 P3-提示{{ end }} |
+| **影响实例** | {{ .Labels.instance }} |
+| **开始时间** | {{ .StartsAt.Format "2006-01-02 15:04:05" }} |
+| **当前数值** | `{{ .Value }}` |
+
+**告警详情：**
+> {{ .Annotations.summary }}
+
+{{ if .Annotations.description }}
+{{ .Annotations.description }}
+{{ end }}
+
+{{ end }}
+{{- end }}
+
+{{ if gt (len .Alerts.Resolved) 0 -}}
+## ✅ 告警恢复 ({{ .Alerts.Resolved | len }}个)
+
+{{ range .Alerts.Resolved }}
+---
+### 📌 {{ .Labels.alertname }}
+
+| 项目 | 内容 |
+|------|------|
+| **告警级别** | {{ if eq .Labels.severity "critical" }}🔴 P1-紧急{{ else if eq .Labels.severity "warning" }}🟡 P2-警告{{ else }}🔵 P3-提示{{ end }} |
+| **影响实例** | {{ .Labels.instance }} |
+| **开始时间** | {{ .StartsAt.Format "2006-01-02 15:04:05" }} |
+| **恢复时间** | {{ .EndsAt.Format "2006-01-02 15:04:05" }} |
+
+{{ end }}
+{{- end }}
+
+---
+📊 **监控链接**
+- [Grafana仪表盘](http://192.168.213.142:3000)
+- [Prometheus查询](http://192.168.213.142:9090)
+
+👤 **值班人员**
+- 负责人：周涛
+- 联系电话：15270024727
+{{ end }}

@@ -1,0 +1,129 @@
+groups:
+- name: application_alerts
+  rules:
+  # ============================================
+  # HTTP服务告警规则 - 优化版
+  # ============================================
+  
+  # HTTP错误率 Critical 告警 - 5xx错误率 > 10%，持续1.5分钟
+  - alert: HighHTTPErrorRate
+    expr: sum(rate(nginx_http_requests_total{status=~"5.."}[5m])) / sum(rate(nginx_http_requests_total[5m])) * 100 > 10
+    for: 90s
+    labels:
+      severity: critical
+    annotations:
+      summary: "【P1级告警】HTTP高错误率 - 接口大量失败"
+      description: |
+        🚨 **告警级别**: P1 - 需要立即处理
+        📊 **HTTP 5xx错误率**: {{ $value }}%
+        ⏱️ **持续时间**: 超过1.5分钟
+        
+        ⚠️ **风险提示**: 接口大量失败可能影响业务正常运行
+        
+        👤 **负责人**: 周涛
+        📞 **联系电话**: 15270024727
+        
+        🔗 **监控链接**:
+        - Grafana仪表盘: http://192.168.213.142:3000
+        - Prometheus查询: http://192.168.213.142:9090
+        💡 **建议**: 检查Nginx日志，排查接口失败原因
+
+  # Nginx请求量 Warning 告警 - 请求量 > 1000 req/s，持续5分钟
+  - alert: HighNginxRequestRate
+    expr: sum(rate(nginx_http_requests_total[5m])) > 1000
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "【P2级告警】Nginx高请求量"
+      description: |
+        📊 **请求量**: {{ $value }} req/s
+        ⏱️ **持续时间**: 超过5分钟
+        
+        🔗 **监控链接**:
+        - Grafana仪表盘: http://192.168.213.142:3000
+        - Prometheus查询: http://192.168.213.142:9090
+        💡 **建议**: 关注请求量趋势，必要时扩容
+
+  # Nginx响应时间 Warning 告警 - 平均响应时间 > 500ms，持续5分钟
+  - alert: HighNginxResponseTime
+    expr: sum(rate(nginx_http_request_duration_seconds_sum[5m])) / sum(rate(nginx_http_request_duration_seconds_count[5m])) > 0.5
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "【P2级告警】Nginx高响应时间"
+      description: |
+        📊 **平均响应时间**: {{ $value }}s
+        ⏱️ **持续时间**: 超过5分钟
+        
+        🔗 **监控链接**:
+        - Grafana仪表盘: http://192.168.213.142:3000
+        - Prometheus查询: http://192.168.213.142:9090
+        💡 **建议**: 优化Nginx配置或应用性能
+
+  # ============================================
+  # 监控系统存储告警规则 - 优化版
+  # ============================================
+  
+  # Prometheus存储 Warning 告警 - 存储 > 10GB，持续5分钟
+  - alert: PrometheusHighStorageUsage
+    expr: prometheus_tsdb_storage_blocks_bytes / 1024 / 1024 / 1024 > 10
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "【P2级告警】Prometheus存储告警"
+      description: |
+        📊 **存储使用量**: {{ $value }} GB
+        ⏱️ **持续时间**: 超过5分钟
+        
+        🔗 **监控链接**:
+        - Grafana仪表盘: http://192.168.213.142:3000
+        - Prometheus查询: http://192.168.213.142:9090
+        💡 **建议**: 调整数据保留策略或扩容存储
+
+  # Loki存储 Warning 告警 - 存储 > 5GB，持续5分钟
+  - alert: LokiHighStorageUsage
+    expr: sum by(instance) (loki_storage_total_bytes) / 1024 / 1024 / 1024 > 5
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "【P2级告警】Loki存储告警"
+      description: |
+        📊 **存储使用量**: {{ $value }} GB
+        🏷️ **实例**: {{ $labels.instance }}
+        ⏱️ **持续时间**: 超过5分钟
+        
+        🔗 **监控链接**:
+        - Grafana仪表盘: http://192.168.213.142:3000
+        - Prometheus查询: http://192.168.213.142:9090
+        💡 **建议**: 调整日志保留策略或扩容存储
+
+  # ============================================
+  # 数据库告警规则 - 优化版
+  # ============================================
+  
+  # 数据库主从延迟 Critical 告警 - 延迟 > 30s，持续2分钟
+  - alert: HighDatabaseReplicationLag
+    expr: mysql_slave_status_seconds_behind_master > 30
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "【P1级告警】数据库主从延迟告警"
+      description: |
+        🚨 **告警级别**: P1 - 需要立即处理
+        📊 **主从延迟**: {{ $value }}秒
+        ⏱️ **持续时间**: 超过2分钟
+        
+        ⚠️ **风险提示**: 数据不同步可能导致业务数据不一致
+        
+        👤 **负责人**: 周涛
+        📞 **联系电话**: 15270024727
+        
+        🔗 **监控链接**:
+        - Grafana仪表盘: http://192.168.213.142:3000
+        - Prometheus查询: http://192.168.213.142:9090
+        💡 **建议**: 检查数据库复制状态，优化主从复制配置

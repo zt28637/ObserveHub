@@ -1,0 +1,127 @@
+groups:
+- name: container_alerts
+  rules:
+  # ============================================
+  # 容器内存告警规则 - 优化版
+  # ============================================
+  
+  # 容器内存 Warning 告警 - 使用率 > 85%，持续5分钟
+  - alert: ContainerHighMemoryUsage
+    expr: sum by(container_label_com_docker_compose_service, instance) (container_memory_usage_bytes) / sum by(container_label_com_docker_compose_service, instance) (container_spec_memory_limit_bytes) * 100 > 85
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "【P2级告警】容器内存使用率较高 - {{ $labels.container_label_com_docker_compose_service }} ({{ $labels.instance }})"
+      description: |
+        📊 **内存使用率**: {{ $value }}%
+        📍 **容器**: {{ $labels.container_label_com_docker_compose_service }}
+        🏷️ **实例**: {{ $labels.instance }}
+        ⏱️ **持续时间**: 超过5分钟
+        
+        🔗 **监控链接**:
+        - Grafana仪表盘: http://192.168.213.142:3000
+        - Prometheus查询: http://192.168.213.142:9090
+        💡 **建议**: 关注内存使用趋势，必要时调整容器内存限制
+
+  # ============================================
+  # 容器CPU告警规则 - 优化版
+  # ============================================
+  
+  # 容器CPU Warning 告警 - 使用率 > 85%，持续5分钟
+  - alert: ContainerHighCPUUsage
+    expr: sum by(container_label_com_docker_compose_service, instance) (rate(container_cpu_usage_seconds_total[5m])) / sum by(container_label_com_docker_compose_service, instance) (container_spec_cpu_quota) * 100 > 85
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "【P2级告警】容器CPU使用率较高 - {{ $labels.container_label_com_docker_compose_service }} ({{ $labels.instance }})"
+      description: |
+        📊 **CPU使用率**: {{ $value }}%
+        📍 **容器**: {{ $labels.container_label_com_docker_compose_service }}
+        🏷️ **实例**: {{ $labels.instance }}
+        ⏱️ **持续时间**: 超过5分钟
+        
+        🔗 **监控链接**:
+        - Grafana仪表盘: http://192.168.213.142:3000
+        - Prometheus查询: http://192.168.213.142:9090
+        💡 **建议**: 关注CPU使用趋势，必要时调整容器CPU限制
+
+  # ============================================
+  # 容器重启告警规则 - 优化版
+  # ============================================
+  
+  # 容器重启 Critical 告警 - 10分钟内重启
+  - alert: ContainerRestarted
+    expr: changes(container_start_time_seconds{container_label_com_docker_compose_service!=""}[10m]) > 0
+    for: 30s
+    labels:
+      severity: critical
+    annotations:
+      summary: "【P1级告警】容器重启 - {{ $labels.container_label_com_docker_compose_service }} ({{ $labels.instance }})"
+      description: |
+        🚨 **告警级别**: P1 - 需要立即处理
+        📍 **容器**: {{ $labels.container_label_com_docker_compose_service }}
+        🏷️ **实例**: {{ $labels.instance }}
+        ⏱️ **持续时间**: 过去10分钟内
+        
+        ⚠️ **风险提示**: 容器频繁重启可能影响服务稳定性
+        
+        👤 **负责人**: 周涛
+        📞 **联系电话**: 15270024727
+        
+        🔗 **监控链接**:
+        - Grafana仪表盘: http://192.168.213.142:3000
+        - Prometheus查询: http://192.168.213.142:9090
+        💡 **建议**: 检查容器日志，排查重启原因
+
+  # ============================================
+  # 容器OOM告警规则 - 优化版
+  # ============================================
+  
+  # 容器OOM Critical 告警 - 发生OOM被杀死
+  - alert: ContainerOOMKilled
+    expr: rate(container_last_seen{container_status="created"}[5m]) > 0 and rate(container_last_seen{container_status="running"}[5m]) < 0
+    for: 1m
+    labels:
+      severity: critical
+    annotations:
+      summary: "【P1级告警】容器OOM被杀死 - {{ $labels.container_label_com_docker_compose_service }} ({{ $labels.instance }})"
+      description: |
+        🚨 **告警级别**: P1 - 需要立即处理
+        📍 **容器**: {{ $labels.container_label_com_docker_compose_service }}
+        🏷️ **实例**: {{ $labels.instance }}
+        ⏱️ **持续时间**: 超过1分钟
+        
+        ⚠️ **风险提示**: OOM可能导致数据丢失或服务中断
+        
+        👤 **负责人**: 周涛
+        📞 **联系电话**: 15270024727
+        
+        🔗 **监控链接**:
+        - Grafana仪表盘: http://192.168.213.142:3000
+        - Prometheus查询: http://192.168.213.142:9090
+        💡 **建议**: 调整容器内存限制，优化应用内存使用
+
+  # ============================================
+  # 容器网络告警规则 - 优化版
+  # ============================================
+  
+  # 容器网络延迟 Warning 告警 - P99延迟 > 50MB/s，持续2分钟
+  - alert: ContainerHighNetworkLatency
+    expr: histogram_quantile(0.99, sum by(le, container_label_com_docker_compose_service, instance) (rate(container_network_receive_bytes_total_bucket[5m]))) / 1024 / 1024 > 50
+    for: 2m
+    labels:
+      severity: warning
+    annotations:
+      summary: "【P2级告警】容器网络延迟过高 - {{ $labels.container_label_com_docker_compose_service }} ({{ $labels.instance }})"
+      description: |
+        📊 **网络P99延迟**: {{ $value }} MB/s
+        📍 **容器**: {{ $labels.container_label_com_docker_compose_service }}
+        🏷️ **实例**: {{ $labels.instance }}
+        ⏱️ **持续时间**: 超过2分钟
+        
+        🔗 **监控链接**:
+        - Grafana仪表盘: http://192.168.213.142:3000
+        - Prometheus查询: http://192.168.213.142:9090
+        💡 **建议**: 检查网络配置，优化网络性能

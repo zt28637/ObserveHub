@@ -1,0 +1,165 @@
+groups:
+- name: node_alerts
+  rules:
+  # ============================================
+  # CPU告警规则 - 优化版
+  # ============================================
+  
+  # CPU Warning 告警 - 使用率 > 50%，持续1分钟
+  - alert: HighCPUUsageWarning
+    expr: (100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100)) > 50
+    for: 1m
+    labels:
+      severity: warning
+    annotations:
+      summary: "【P2级告警】CPU使用率较高 - {{ $labels.instance }}"
+      description: |
+        📊 **CPU使用率**: {{ $value }}%
+        📍 **实例**: {{ $labels.instance }}
+        ⏱️ **持续时间**: 超过1分钟
+        
+        👤 **负责人**: 周涛
+        📞 **联系电话**: 15270024727
+        🔗 **监控链接**:
+        - Grafana仪表盘: http://192.168.213.142:3000
+        - Prometheus查询: http://192.168.213.142:9090
+        💡 **建议**: 关注CPU使用趋势，必要时扩容
+
+  # CPU Critical 告警 - 使用率 > 80%，持续2分钟
+  - alert: HighCPUUsageCritical
+    expr: (100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[2m])) * 100)) > 80
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "【P1级告警】CPU使用率过高 - {{ $labels.instance }}"
+      description: |
+        🚨 **告警级别**: P1 - 需要立即处理
+        📍 **影响范围**: {{ $labels.instance }} 服务器
+        📊 **当前CPU使用率**: {{ $value }}%
+        ⏱️ **持续时间**: 超过2分钟
+        
+        👤 **负责人**: 周涛
+        📞 **联系电话**: 15270024727
+        
+        🔗 **监控链接**:
+        - Grafana仪表盘: http://192.168.213.142:3000
+        - Prometheus查询: http://192.168.213.142:9090
+        💡 **建议**: 关注CPU使用趋势，必要时扩容
+
+  # ============================================
+  # 内存告警规则 - 优化版
+  # ============================================
+  
+  # 内存 Warning 告警 - 使用率 > 70%，持续3分钟
+  - alert: HighMemoryUsageWarning
+    expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 70
+    for: 3m
+    labels:
+      severity: warning
+    annotations:
+      summary: "【P2级告警】内存使用率较高 - {{ $labels.instance }}"
+      description: |
+        📊 **内存使用率**: {{ $value }}%
+        📍 **实例**: {{ $labels.instance }}
+        ⏱️ **持续时间**: 超过3分钟
+        
+        🔗 **监控链接**:
+        - Grafana仪表盘: http://192.168.213.142:3000
+        - Prometheus查询: http://192.168.213.142:9090
+        💡 **建议**: 关注内存使用趋势，必要时扩容
+
+  # 内存 Critical 告警 - 使用率 > 85%，持续2分钟
+  - alert: HighMemoryUsageCritical
+    expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+    for: 2m
+    labels:
+      severity: critical
+    annotations:
+      summary: "【P1级告警】内存使用率过高 - {{ $labels.instance }}"
+      description: |
+        🚨 **告警级别**: P1 - 需要立即处理
+        📍 **影响范围**: {{ $labels.instance }} 服务器
+        📊 **当前内存使用率**: {{ $value }}%
+        ⏱️ **持续时间**: 超过2分钟
+        
+        ⚠️ **风险提示**: 内存使用率过高可能导致OOM杀进程
+        
+        👤 **负责人**: 周涛
+        📞 **联系电话**: 15270024727
+        
+        🔗 **监控链接**:
+        - Grafana仪表盘: http://192.168.213.142:3000
+        - Prometheus查询: http://192.168.213.142:9090
+        💡 **建议**: 关注内存使用趋势，必要时扩容
+
+  # ============================================
+  # 磁盘告警规则 - 优化版
+  # ============================================
+  
+  # 磁盘 Warning 告警 - 使用率 > 75%，持续5分钟
+  - alert: HighDiskUsageWarning
+    expr: (1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) * 100 > 75
+    for: 5m
+    labels:
+      severity: warning
+    annotations:
+      summary: "【P2级告警】磁盘空间不足预警 - {{ $labels.instance }}"
+      description: |
+        📊 **磁盘使用率**: {{ $value }}%
+        📍 **实例**: {{ $labels.instance }}
+        💾 **挂载点**: /
+        ⏱️ **持续时间**: 超过5分钟
+        
+        🔗 **监控链接**:
+        - Grafana仪表盘: http://192.168.213.142:3000
+        - Prometheus查询: http://192.168.213.142:9090
+        💡 **建议**: 及时清理日志或扩容磁盘
+
+  # 磁盘 Critical 告警 - 使用率 > 90%，持续3分钟
+  - alert: HighDiskUsageCritical
+    expr: (1 - (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"})) * 100 > 90
+    for: 3m
+    labels:
+      severity: critical
+    annotations:
+      summary: "【P1级告警】磁盘空间严重不足 - {{ $labels.instance }}"
+      description: |
+        🚨 **告警级别**: P1 - 需要立即处理
+        📍 **影响范围**: {{ $labels.instance }} 服务器
+        📊 **当前磁盘使用率**: {{ $value }}%
+        💾 **挂载点**: /
+        ⏱️ **持续时间**: 超过3分钟
+        
+        ⚠️ **风险提示**: 磁盘空间不足可能导致服务异常或数据丢失
+        
+        👤 **负责人**: 周涛
+        📞 **联系电话**: 15270024727
+        
+        🔗 **监控链接**:
+        - Grafana仪表盘: http://192.168.213.142:3000
+        - Prometheus查询: http://192.168.213.142:9090
+        💡 **建议**: 及时清理日志或扩容磁盘
+
+  # ============================================
+  
+  # 节点宕机告警 - 核心服务，立即告警
+  - alert: NodeDown
+    expr: up{job=~"node|prometheus"} == 0
+    for: 30s
+    labels:
+      severity: critical
+    annotations:
+      summary: "【P0级告警】节点宕机 - {{ $labels.instance }}"
+      description: |
+        🚨 **告警级别**: P0 - 需要立即处理
+        📍 **影响范围**: {{ $labels.instance }} 服务器
+        ⏱️ **持续时间**: 超过30秒
+        
+        👤 **负责人**: 周涛
+        📞 **联系电话**: 15270024727
+        
+        🔧 **建议操作**:
+        1. 立即检查服务器状态
+        2. 确认网络连接
+        3. 检查服务进程是否正常
